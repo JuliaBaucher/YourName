@@ -1,0 +1,214 @@
+# Frontend Prompt — Single-Page AI CV Chatbot (Must Output index.html)
+
+## Role
+You are a **senior frontend engineer**.
+
+Build a **single-page chatbot website** as **one HTML file** (`index.html`) with embedded **CSS + JavaScript**, suitable for hosting on **GitHub Pages**, and calling an **AWS backend** (API Gateway HTTP API + Lambda).  
+This is **frontend-only**.
+
+---
+
+## Absolute Output Rules (Critical)
+- Your response must contain **ONLY** the complete `index.html` source code.
+- Put the entire file in **one single HTML code block** (```html ... ```).
+- Do **not** add explanations, comments outside the code, multiple files, or any extra text.
+
+---
+
+## Backend Contract (Frontend Must Stay Generic)
+
+The frontend must depend **only** on this API contract (no Bedrock-specific frontend logic).
+
+### API
+- AWS API Gateway **HTTP API**
+- Route: `POST /chat`
+- Endpoint URL: https://xmy6xfiku4.execute-api.eu-central-1.amazonaws.com/prod/chat (store it in a single constant near the top of the JS so it can be changed easily)
+
+### Request Body
+- JSON payload containing the user message
+
+### Response Body (Success)
+- JSON payload containing the assistant reply
+
+### Response Body (Error)
+- JSON payload containing:
+  - a human-readable error message
+  - optional technical details
+
+### CORS
+- Enabled for origin: `https://juliabaucher.github.io`
+- Lambda handles:
+  - `OPTIONS` preflight
+  - `Access-Control-Allow-Origin` and related headers
+
+### LLM
+- The backend uses **Amazon Bedrock**
+- The frontend must **not** reference Bedrock and must rely only on the API contract
+
+---
+
+## Deliverable Requirements (What index.html Must Implement)
+
+- Works:
+  - When opened directly in a browser
+  - When hosted on GitHub Pages
+- UI: clean, modern **CV-website style**
+- Fully **responsive** on mobile and desktop
+- Vanilla **HTML/CSS/JS only** (no frameworks)
+
+---
+
+## Layout & UI Structure
+
+### Header
+- Title: **NAME LAST NAME – AI CV Assistant**
+- Subtitle:  
+  *Hello! I am an AI assistant trained on this professional profile. Please feel free to ask me about specific work experience, educational background, technical projects, or any other details you find useful for your evaluation.*
+
+### Chat Area
+- Message bubbles:
+  - User messages aligned right
+  - Assistant messages aligned left
+- Timestamps: optional
+- Auto-scroll to the latest message
+
+### Input Area
+- Textarea input
+- **Send** button
+- **Clear chat** button
+
+### Keyboard Behavior
+- `Enter` sends the message
+- `Shift + Enter` creates a new line
+
+### Loading State
+- Display a typing / thinking indicator (e.g. animated dots) while waiting for a reply
+
+---
+
+## Functional Requirements
+
+### API Call (LLM Call)
+- Use `fetch()` with:
+  - `POST` method
+  - `Content-Type: application/json`
+  - Request body containing the user message
+- Parse the JSON response
+- Display the assistant reply
+
+### Safe Rendering / Sanitization
+- Render all content as **text only**
+- Never use `innerHTML`
+- Sanitize output to prevent HTML injection
+- All user and assistant messages must be treated as plain text **or** passed through a sanitization library to prevent XSS attacks
+
+### Error Handling
+- If the fetch fails or the backend returns an error:
+  - Show a **friendly error bubble**
+  - Keep the user message visible in the chat
+  - Do not clear the input unintentionally
+
+---
+
+## Client-Side Guardrails
+
+### Input Validation
+- Disable sending if the input:
+  - Is empty
+  - Contains only whitespace
+
+### Character Budgeting
+- Hard input limit (e.g. **4000 characters**)
+- Visible character counter
+- Counter changes color when approaching the limit
+
+---
+
+## Interaction Design (UX)
+
+### Optimistic UI
+- Display the user message immediately after sending
+- Do not wait for the backend response
+
+### Loading Indicator
+- Show a “Typing” or “Thinking” indicator while the API request is pending
+
+### Auto-Scroll
+- Automatically scroll to the bottom whenever:
+  - A user message is added
+  - An assistant message is added
+  - An error message is shown
+
+### Focus Management
+- Automatically refocus the input field:
+  - After a message is sent
+  - After the chat is cleared
+
+---
+
+## Additional Features
+
+### Clear Chat
+- Resets the conversation in the UI (client-side only)
+
+### Local Storage Persistence (Optional)
+- Restore the last chat on page refresh
+
+### Input Retention
+- If a message fails to send, keep the user’s original text  
+  **or** provide a “Retry” button
+
+### Copy to Clipboard
+- Add a “Copy” button to assistant responses
+
+### Architecture Description (UI Content)
+- Include a short description of the chatbot’s technical architecture 'This page is a static, single-file web application. When the user send a message, the browser makes a POST /chat request to an AWS API Gateway HTTP API endpoint. The request is handled by an AWS Lambda function, which calls a large language model and returns a JSON response containing the assistant’s reply'
+- Displayed within the UI (e.g. footer or expandable section)
+
+---
+
+## Responsive & Adaptive UI
+
+### Layout
+- Fluid layout supporting:
+  - Mobile
+  - Tablet
+  - Desktop
+
+### Flexible Textarea
+- Textarea grows vertically as the user types
+- Enforce a maximum height
+- Avoid small internal scrollbars
+
+---
+
+## Accessibility
+- Proper color contrast
+- Visible focus states
+- ARIA labels for:
+  - Text input
+  - Send button
+  - Clear chat button
+
+---
+
+## Style Requirements
+- Simple and elegant design:
+  - Soft background
+  - Rounded chat bubbles
+  - Subtle shadows
+- Dark / Light mode toggle:
+  - Based on system preference
+  - Or manual user toggle
+
+---
+
+## Feedback & Missing Frontend Considerations (Do Not Remove)
+- No explicit message state model is defined (IDs, roles, retries)
+- Retry UX is mentioned but not clearly specified
+- No fetch timeout or AbortController requirement
+- No accessibility guidance for the loading indicator (ARIA live regions)
+- No user feedback defined after “Copy to Clipboard”
+- No distinction between network errors and backend errors
+- No guidance for mobile virtual keyboard viewport handling
+- No versioning strategy for local storage persistence

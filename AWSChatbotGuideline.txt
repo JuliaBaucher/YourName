@@ -1,0 +1,96 @@
+Open the AWS Console and click on Amazon Q in the top-right corner for additional instructions.
+
+# 1. Lambda Implementation (Node.js 22.x)
+
+Select the region where Amazon Bedrocj is available, for example Frankfurt
+
+Create a new Lambda function, for example:
+
+- **YourName**
+
+
+## Code Upload
+- Go to the **Code** tab.
+- Click **Upload from** → **.zip file**.
+- Upload the ZIP file containing the Lambda code.
+
+## Configuration
+- In the **Configuration** tab, under **General configuration**, 
+ensure the **timeout** is set to **1 minute**.
+
+### Environment Variables
+Add the following environment variables:
+
+- **BEDROCK_MODEL_ID**:  
+  `eu.anthropic.claude-haiku-4-5-20251001-v1:0`
+
+- **SYSTEM_MESSAGE** (Max 4 KB or 4,096 characters):  
+    For example, You are a helpful AI assistant on YourName's professional CV website. Answer politely, concisely, and factually, adapting to the user’s language when possible (French or English preferred). If a question is ambiguous, ask a short clarifying question before answering. Context: Put the summary of your CV
+  
+  Click **Deploy**.
+
+---
+
+# 2. IAM Role
+
+- Within your Lambda function, go to the **Configuration** tab.
+- Select **Permissions**.
+- Find the **Role name** (blue link) and click it. This opens the **IAM** console.
+- You already have one default permission — keep it.
+- Add one more permission for Bedrock:
+  - Click **Add permissions** → **Attach policies**.
+  - Search for **AmazonBedrockFullAccess**.
+  - Select it and click **Add permissions** at the bottom of the page.
+
+---
+
+# 3. API Gateway Configuration
+
+- In the AWS Console search bar, search for **API Gateway** and click **Create API**.
+- Select **HTTP API**
+- Enter Your Name and Save. 
+- Create 2 routes:
+  - **Route**: `POST /chat`and OPTIONS /chat
+  
+- Add integrations: for each route, select lambda function that you created
+
+### CORS Configuration
+- **Origin**: Put your github URL. For my chatbot, its https://juliabaucher.github.io
+- **Methods**: POST, OPTIONS
+- **Headers**: Content-Type
+
+### Stage
+- **Stage name**: `prod`
+
+- Go to **Lambda** → **Triggers** and copy the **API endpoint**.
+
+
+# 4. Create a Single Webpage
+
+
+- Open the prompt and Add your API endpoint in the prompt in the section ##API - 'Endpoint URL: **TO BE PROVIDED**
+- Use the provided prompt in any LLM (e.g. ChatGPT). 
+- Copy the generated HTML code into a text file and name it **index.html**.
+
+---
+
+# 5. Create Your Frontend on GitHub
+
+
+- Open github, go to **Home** and create a new repository 
+- Set the repository to **Public**.
+- Enable the checkbox **Add a README file**.
+
+### Upload the Frontend
+- Within the repository, click **Code** → **Add file** → **Upload files**.
+- Upload **index.html**.
+- Click **Commit changes**.
+
+### Enable GitHub Pages
+- Within your repository, click **Settings**.
+- Go to **Pages**.
+- Under **Branch**, select **main / root**.
+- Click **Save**.
+
+- Wait until deployment is complete (you can monitor progress in the **Actions** tab at the top).
+- Once deployed, your live URL will be available under **Settings → Pages**.
