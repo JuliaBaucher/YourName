@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
-  <title>NAME LAST NAME – AI CV Assistant</title>
+  <title>vLLM Powered Chatbot – Implementation Assistant</title>
   <style>
     :root{
       --bg: #f6f7fb;
@@ -524,10 +524,10 @@
     <header>
       <div class="head">
         <div class="title">
-          <h1>NAME LAST NAME – AI CV Assistant</h1>
+          <h1>vLLM Powered Chatbot – Implementation Assistant</h1>
           <p class="subtitle">
-            Hello! I am an AI assistant trained on this professional profile. Please feel free to ask me about specific work experience,
-            educational background, technical projects, or any other details you find useful for your evaluation.
+            Hello! I am a vLLM-powered chatbot designed to explain how this implementation works. You can ask me about the architecture,
+            backend flow, frontend behavior, prompt handling, API communication, or how vLLM serves the model locally.
           </p>
         </div>
 
@@ -549,10 +549,10 @@
             <div class="hint">Enter to send • Shift+Enter for a new line</div>
           </div>
           <div class="right">
-            <button class="chip" type="button" data-q="Summarize your most relevant experience in 5 bullets.">Experience summary</button>
-            <button class="chip" type="button" data-q="What are your strongest technical skills?">Technical skills</button>
-            <button class="chip" type="button" data-q="Tell me about your most impactful project and outcomes.">Impactful project</button>
-            <button class="chip" type="button" data-q="What roles are you looking for, and why?">Role fit</button>
+            <button class="chip" type="button" data-q="Explain in simple words how this vLLM implementation works end to end.">How it works</button>
+            <button class="chip" type="button" data-q="What is the role of vLLM in this architecture?">Role of vLLM</button>
+            <button class="chip" type="button" data-q="Explain the difference between the frontend, backend, and model server in this implementation.">Architecture layers</button>
+            <button class="chip" type="button" data-q="Why is the prompt stored in the backend and not in the frontend?">Prompt handling</button>
           </div>
         </div>
 
@@ -575,7 +575,7 @@
               <textarea
                 id="input"
                 aria-label="Message input"
-                placeholder="Type your question about the CV…"
+                placeholder="Ask how this vLLM chatbot implementation works…"
                 maxlength="4000"
                 rows="1"
               ></textarea>
@@ -599,27 +599,27 @@
           </summary>
           <div class="details-body">
             <div>
-              This page is a static, single-file web application. When the user send a message, the browser makes a POST /chat request to an AWS API Gateway HTTP API endpoint.
-              The request is handled by an AWS Lambda function, which calls a large language model and returns a JSON response containing the assistant’s reply.
+              This page is a static, single-file web application. When the user sends a message, the browser makes a POST <span class="mono">/chat</span> request to a backend API.
+              The backend receives the message, applies the system prompt and application logic, and calls a local vLLM server through its OpenAI-compatible API.
+              vLLM then runs the open-source model and returns the generated response to the backend, which sends a JSON reply back to the browser.
             </div>
-            <div class="mono" aria-label="Backend endpoint (for reference)">POST /chat → https://xmy6xfiku4.execute-api.eu-central-1.amazonaws.com/prod/chat</div>
+            <div class="mono" aria-label="Backend endpoint (for reference)">POST /chat → your backend API endpoint here</div>
           </div>
         </details>
 
         <details>
-          <summary aria-label="Feedback and missing frontend considerations">
-            <span>Feedback & Missing Frontend Considerations</span>
+          <summary aria-label="Implementation notes">
+            <span>Implementation Notes</span>
             <span aria-hidden="true">▾</span>
           </summary>
           <div class="details-body">
-            <div>• No explicit message state model is defined (IDs, roles, retries)</div>
-            <div>• Retry UX is mentioned but not clearly specified</div>
-            <div>• No fetch timeout or AbortController requirement</div>
-            <div>• No accessibility guidance for the loading indicator (ARIA live regions)</div>
-            <div>• No user feedback defined after “Copy to Clipboard”</div>
-            <div>• No distinction between network errors and backend errors</div>
-            <div>• No guidance for mobile virtual keyboard viewport handling</div>
-            <div>• No versioning strategy for local storage persistence</div>
+            <div>• Frontend: static HTML/CSS/JS chat UI running in the browser</div>
+            <div>• Backend: receives user messages and calls the model server</div>
+            <div>• Model server: vLLM exposes an OpenAI-compatible local API</div>
+            <div>• Prompt logic lives in the backend, not in the frontend</div>
+            <div>• This prototype is stateless unless conversation history is added in backend code</div>
+            <div>• localStorage is used only for browser-side chat persistence</div>
+            <div>• The frontend renders messages as plain text to reduce XSS risk</div>
           </div>
         </details>
       </section>
@@ -633,8 +633,8 @@
         </summary>
         <div class="details-body">
           <div>
-            This is a simple CV-style chat interface designed for GitHub Pages. It uses vanilla HTML/CSS/JS and sends messages to a backend API using <span class="mono">fetch()</span>.
-            Messages are rendered as plain text to reduce XSS risk.
+            This is a simple vLLM chatbot interface built with vanilla HTML, CSS, and JavaScript. It sends user questions to a backend API using <span class="mono">fetch()</span>,
+            and the backend communicates with a vLLM model server to generate responses. Messages are rendered as plain text to reduce XSS risk.
           </div>
           <div class="mono" aria-label="Storage note">Optional persistence: last chat is stored locally in your browser (localStorage).</div>
         </div>
@@ -655,8 +655,8 @@
 
       // === Config ===
       const API_ENDPOINT = "https://xmy6xfiku4.execute-api.eu-central-1.amazonaws.com/prod/chat";
-      const STORAGE_KEY = "ai_cv_chat_v1";
-      const THEME_KEY = "ai_cv_theme_v1";
+      const STORAGE_KEY = "vllm_impl_chat_v1";
+      const THEME_KEY = "vllm_impl_theme_v1";
       const MAX_CHARS = 4000;
 
       // === DOM ===
@@ -676,9 +676,9 @@
       const state = {
         messages: [],
         pending: false,
-        lastFailed: null, // { userText, requestId, errorKind, errorDetails }
+        lastFailed: null,
         nextId: 1,
-        theme: "system", // "system" | "light" | "dark"
+        theme: "system",
       };
 
       // === Utilities ===
@@ -688,7 +688,6 @@
       }
 
       function announce(text) {
-        // Screen-reader announcement (no visible UI)
         liveRegion.textContent = text;
       }
 
@@ -700,7 +699,6 @@
       }
 
       function setText(el, text) {
-        // Text-only rendering (prevents HTML injection)
         el.textContent = text == null ? "" : String(text);
       }
 
@@ -737,14 +735,14 @@
       function setPending(isPending) {
         state.pending = isPending;
         sendBtn.disabled = !canSend();
-        inputEl.disabled = isPending ? false : false; // keep typing allowed
+        inputEl.disabled = false;
       }
 
       function makeMessage(role, text, extra) {
         const mid = "m" + (state.nextId++);
         const msg = {
           id: mid,
-          role: role, // "user" | "assistant" | "error" | "system"
+          role: role,
           text: text,
           ts: nowTimeLabel(),
           extra: extra || {}
@@ -829,8 +827,6 @@
       }
 
       function renderAll() {
-        // Remove everything except the initial welcome/system block (which already exists)
-        // We rebuild by clearing and re-adding welcome block + messages (excluding system welcome kept separately).
         const existingWelcome = chatEl.querySelector('[data-mid="m0"]');
         chatEl.innerHTML = "";
         if (existingWelcome) chatEl.appendChild(existingWelcome);
@@ -849,7 +845,7 @@
             messages: state.messages
           };
           localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        } catch (e) { /* ignore */ }
+        } catch (e) {}
       }
 
       function restore() {
@@ -858,17 +854,17 @@
           if (!raw) return;
           const payload = JSON.parse(raw);
           if (!payload || payload.v !== 1 || !Array.isArray(payload.messages)) return;
-          state.messages = payload.messages.slice(0, 200); // cap for safety
+          state.messages = payload.messages.slice(0, 200);
           state.nextId = typeof payload.nextId === "number" ? payload.nextId : (state.messages.length + 1);
           renderAll();
-        } catch (e) { /* ignore */ }
+        } catch (e) {}
       }
 
       function clearChat() {
         state.messages = [];
         state.lastFailed = null;
         state.nextId = 1;
-        try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
         renderAll();
         focusInput();
         announce("Chat cleared.");
@@ -879,9 +875,8 @@
       }
 
       function setThemeMode(mode) {
-        // mode: "system" | "light" | "dark"
         state.theme = mode;
-        try { localStorage.setItem(THEME_KEY, mode); } catch (e) { /* ignore */ }
+        try { localStorage.setItem(THEME_KEY, mode); } catch (e) {}
 
         const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
         const effective = mode === "system" ? (systemDark ? "dark" : "light") : mode;
@@ -899,7 +894,6 @@
       }
 
       function safeGetErrorMessage(obj) {
-        // Accepts backend JSON error contract: { message, details? } (names may vary)
         if (!obj || typeof obj !== "object") return null;
         const m = obj.message || obj.error || obj.errorMessage || obj.msg;
         if (typeof m === "string" && m.trim()) return m.trim();
@@ -964,7 +958,6 @@
 
       async function callApi(userText) {
         const controller = new AbortController();
-        // Timeout is not required by the prompt; included as a practical safeguard.
         const timeoutMs = 30000;
         const t = window.setTimeout(() => controller.abort(), timeoutMs);
 
@@ -981,7 +974,6 @@
           if (ct.includes("application/json")) {
             try { data = await res.json(); } catch (e) { data = null; }
           } else {
-            // If backend returns non-JSON, treat as error-friendly
             const txt = await res.text().catch(() => "");
             data = txt ? { message: txt } : null;
           }
@@ -992,7 +984,6 @@
             return { ok: false, status: res.status, friendly, details };
           }
 
-          // Success: expect a JSON payload containing assistant reply
           let reply =
             (data && (data.reply || data.assistant || data.answer || data.message)) ||
             (typeof data === "string" ? data : null);
@@ -1025,12 +1016,10 @@
         if (text.length > MAX_CHARS) return;
         if (state.pending) return;
 
-        // Optimistic UI: add user message immediately
         const userMsg = makeMessage("user", text.trim());
         renderMessage(userMsg);
         scrollToBottom();
 
-        // Clear input only after capturing, but keep content on failure via state.lastFailed
         inputEl.value = "";
         autosizeTextarea();
         updateCounter();
@@ -1039,7 +1028,6 @@
         setPending(true);
         state.lastFailed = null;
 
-        // Loading indicator
         addTypingIndicator();
         announce("Sending message.");
 
@@ -1052,7 +1040,6 @@
           persist();
           announce("Assistant replied.");
         } else {
-          // Keep user message visible. Provide friendly error + optional details.
           const parts = [];
           parts.push(result.friendly || "Sorry, an error occurred.");
           if (result.details) parts.push("Details: " + result.details);
@@ -1061,7 +1048,6 @@
           const errMsg = makeMessage("error", errText, { retryable: true });
           renderMessage(errMsg);
 
-          // Input retention strategy: store last failed text and re-fill on retry.
           state.lastFailed = {
             userText: userMsg.text,
             requestId: userMsg.id,
@@ -1094,8 +1080,8 @@
 
       function initWelcome() {
         setText(welcomeText,
-          "Welcome! Ask any question about the professional profile.\n\n" +
-          "Tip: You can use the quick question chips above, or type your own question."
+          "Welcome! I am a vLLM-powered implementation assistant.\n\n" +
+          "Ask me how this chatbot works, what each component does, or how the frontend, backend, and vLLM model server interact."
         );
       }
 
@@ -1119,7 +1105,6 @@
 
       themeToggle.addEventListener("click", cycleTheme);
 
-      // System theme changes (only if in system mode)
       if (window.matchMedia) {
         const mq = window.matchMedia("(prefers-color-scheme: dark)");
         const onChange = () => {
@@ -1133,16 +1118,13 @@
       (function init() {
         initWelcome();
 
-        // Restore theme preference
         let savedTheme = null;
         try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) { savedTheme = null; }
         if (savedTheme !== "light" && savedTheme !== "dark" && savedTheme !== "system") savedTheme = "system";
         setThemeMode(savedTheme);
 
-        // Restore chat
         restore();
 
-        // Ensure counter & autosize are correct
         autosizeTextarea();
         updateCounter();
         sendBtn.disabled = !canSend();
